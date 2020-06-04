@@ -1,0 +1,3 @@
+rootProject.name = 'inductive'
+include 'inductive'
+include 'data-structure'

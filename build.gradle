@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+}
+
+group 'me.dannypsnl'
+version '0.1'
+
+compileJava {
+    options.compilerArgs += ["--enable-preview"]
+}
+test {
+    jvmArgs '--enable-preview'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
