@@ -8,6 +8,9 @@ version '0.1'
 compileJava {
     options.compilerArgs += ["--enable-preview"]
 }
+compileTestJava {
+    options.compilerArgs += ["--enable-preview"]
+}
 test {
     jvmArgs '--enable-preview'
 }

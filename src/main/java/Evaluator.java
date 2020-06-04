@@ -20,7 +20,7 @@ public class Evaluator {
                     return eval(env, result);
                 }
             }
-        } else if (term instanceof Constructor c) {
+        } else if (term instanceof Constructor) {
             return term;
         } else if (term instanceof Var v) {
             return env.lookup(v.name);

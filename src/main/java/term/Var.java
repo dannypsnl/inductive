@@ -1,8 +1,8 @@
 package term;
 
-public class Var {
-    Var(String n) {
-        name = n;
+public class Var implements Term {
+    public Var(String name) {
+        this.name = name;
     }
 
     public String name;
