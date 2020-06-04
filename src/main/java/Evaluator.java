@@ -1,9 +1,9 @@
 import datastructure.Pair;
 import environment.Env;
-import semanctic.RedefinedException;
 import pattern.Deconstruct;
 import pattern.Name;
 import pattern.Pattern;
+import semanctic.RedefinedException;
 import semanctic.SemanticException;
 import term.Constructor;
 import term.PatternMatching;
@@ -32,9 +32,20 @@ public class Evaluator {
     boolean match(Env env, Pattern pattern, Term target) throws RedefinedException {
         if (pattern instanceof Deconstruct d &&
                 target instanceof Constructor c) {
-            return c.name.equals(d.name);
+            if ((c.name.equals(d.name))
+                    && (c.constructors.size() == d.patternList.size())) {
+                for (var i = 0; i < d.patternList.size(); i++) {
+                    // if any sub-pattern mismatched, return false
+                    if (!match(env, d.patternList.get(i), c.constructors.get(i))) {
+                        return false;
+                    }
+                }
+                // all sub-pattern works
+                return true;
+            }
         } else if (pattern instanceof Name n) {
             env.bind(n.name, target);
+            return true;
         }
         return false;
     }
