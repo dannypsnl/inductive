@@ -1,4 +1,4 @@
-package term;
+package core;
 
 import datastructure.Pair;
 import pattern.Pattern;

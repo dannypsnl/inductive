@@ -1,12 +1,12 @@
+import core.Constructor;
+import core.PatternMatching;
+import core.Var;
 import datastructure.Pair;
 import environment.Env;
 import org.junit.Test;
 import pattern.Deconstruct;
 import pattern.Name;
 import semanctic.SemanticException;
-import term.Constructor;
-import term.PatternMatching;
-import term.Var;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -15,7 +15,7 @@ public class EvaluatorTest {
     Evaluator evaluator = new Evaluator();
 
     @Test
-    public void evalOnVariable() throws SemanticException {
+    public void evalOnVariable() throws SemanticException, UnreachableException {
         Env env = new Env();
         env.bind("x", new Constructor("Z"));
         var r = evaluator.eval(env, new Var("x"));
@@ -27,7 +27,7 @@ public class EvaluatorTest {
     }
 
     @Test
-    public void evalOnConstructor() throws SemanticException {
+    public void evalOnConstructor() throws SemanticException, UnreachableException {
         Env env = new Env();
         var r = evaluator.eval(env, new Constructor("S", new Constructor("Z")));
         if (r instanceof Constructor c) {
@@ -38,7 +38,7 @@ public class EvaluatorTest {
     }
 
     @Test
-    public void evalOnPatternMatching() throws SemanticException {
+    public void evalOnPatternMatching() throws SemanticException, UnreachableException {
         Env env = new Env();
         var e = new PatternMatching(new Constructor("S", new Constructor("Z")),
                 new Pair<>(new Deconstruct("S", new Name("x")), new Var("x")));

@@ -1,17 +1,17 @@
 package environment;
 
+import core.Value;
 import semanctic.NoVariable;
 import semanctic.RedefinedException;
-import term.Term;
 
 import java.util.HashMap;
 import java.util.Optional;
 
 public class Env {
     private final Optional<Env> parent;
-    private final HashMap<String, Term> nameToTerm;
+    private final HashMap<String, Value> nameToTerm;
 
-    public Term lookup(String name) throws NoVariable {
+    public Value lookup(String name) throws NoVariable {
         if (nameToTerm.containsKey(name)) {
             return nameToTerm.get(name);
         } else if (parent.isPresent()) {
@@ -21,7 +21,7 @@ public class Env {
         }
     }
 
-    public void bind(String name, Term t) throws RedefinedException {
+    public void bind(String name, Value t) throws RedefinedException {
         if (nameToTerm.containsKey(name)) {
             throw new RedefinedException(name);
         } else {

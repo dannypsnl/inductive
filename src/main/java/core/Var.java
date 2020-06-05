@@ -1,6 +1,6 @@
-package term;
+package core;
 
-public class Var implements Term {
+public class Var implements Term, Value {
     public Var(String name) {
         this.name = name;
     }

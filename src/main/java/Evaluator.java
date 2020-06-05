@@ -1,17 +1,13 @@
+import core.*;
 import datastructure.Pair;
 import environment.Env;
 import pattern.Deconstruct;
 import pattern.Name;
 import pattern.Pattern;
-import semanctic.RedefinedException;
 import semanctic.SemanticException;
-import term.Constructor;
-import term.PatternMatching;
-import term.Term;
-import term.Var;
 
 public class Evaluator {
-    public Term eval(Env env, Term term) throws SemanticException {
+    public Value eval(Env env, Term term) throws SemanticException, UnreachableException {
         if (term instanceof PatternMatching p) {
             for (Pair<Pattern, Term> pair : p.patternToResult) {
                 var pattern = pair.first;
@@ -20,16 +16,15 @@ public class Evaluator {
                     return eval(env, result);
                 }
             }
-        } else if (term instanceof Constructor) {
-            return term;
+        } else if (term instanceof Constructor c) {
+            return c;
         } else if (term instanceof Var v) {
             return env.lookup(v.name);
         }
-        // do nothing for now
-        return term;
+        throw new UnreachableException();
     }
 
-    boolean match(Env env, Pattern pattern, Term target) throws RedefinedException {
+    boolean match(Env env, Pattern pattern, Term target) throws SemanticException, UnreachableException {
         if (pattern instanceof Deconstruct d &&
                 target instanceof Constructor c) {
             if ((c.name.equals(d.name))
@@ -44,7 +39,7 @@ public class Evaluator {
                 return true;
             }
         } else if (pattern instanceof Name n) {
-            env.bind(n.name, target);
+            env.bind(n.name, eval(env, target));
             return true;
         }
         return false;
