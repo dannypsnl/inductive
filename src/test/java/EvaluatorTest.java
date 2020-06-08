@@ -53,6 +53,10 @@ public class EvaluatorTest {
     @Test
     public void evalOnApplication() throws SemanticException, UnreachableException {
         Env env = new Env();
+        env.bind("Nat", new Inductive("Nat",
+                new Constructor("Z"),
+                new Constructor("S", new Var("Nat"))
+        ));
         var e = new Application(
                 // (lambda (n : Nat)
                 //   (match n

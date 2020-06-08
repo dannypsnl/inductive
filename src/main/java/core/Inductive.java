@@ -4,11 +4,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class Constructor implements Term, Value {
+public class Inductive implements Term, Value {
     public String name;
-    public List<Term> constructors;
+    public List<Constructor> constructors;
 
-    public Constructor(String name, Term... constructors) {
+    public Inductive(String name, Constructor... constructors) {
         this.name = name;
         this.constructors = Arrays.asList(constructors);
     }
@@ -18,12 +18,11 @@ public class Constructor implements Term, Value {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof Constructor that)) {
-            return false;
-        } else if (!Objects.equals(name, that.name)) {
+        if (!(o instanceof Inductive inductive)) {
             return false;
         } else {
-            return true;
+            // promise inductive name is unique is the premise of this check
+            return Objects.equals(name, inductive.name);
         }
     }
 

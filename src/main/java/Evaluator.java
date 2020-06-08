@@ -4,10 +4,7 @@ import environment.Env;
 import pattern.Deconstruct;
 import pattern.Name;
 import pattern.Pattern;
-import semanctic.ArityException;
-import semanctic.NonExhaustException;
-import semanctic.NotLambdaException;
-import semanctic.SemanticException;
+import semanctic.*;
 
 public class Evaluator {
     public Value eval(Env env, Term term) throws SemanticException, UnreachableException {
@@ -32,15 +29,18 @@ public class Evaluator {
                 for (var i = 0; i < f.parameters.size(); i++) {
                     var param = f.parameters.get(i);
                     var arg = app.arguments.get(i);
-                    // TODO: check arg type matched
+                    check(env, arg, param.type);
                     env.bind(param.name, eval(env, arg));
                 }
                 return eval(env, f.body);
             } else {
                 throw new NotLambdaException();
             }
+        } else if (term instanceof Inductive inductive) {
+            return inductive;
+        } else {
+            throw new UnreachableException();
         }
-        throw new UnreachableException();
     }
 
     boolean match(Env env, Pattern pattern, Term target) throws SemanticException, UnreachableException {
@@ -62,5 +62,18 @@ public class Evaluator {
             return true;
         }
         return false;
+    }
+
+    void check(Env env, Term term, Term type) throws SemanticException, UnreachableException {
+        var tm = eval(env, term);
+        var typ = eval(env, type);
+        if (typ instanceof Inductive inductive) {
+            for (Constructor c : inductive.constructors) {
+                if (c.equals(tm)) {
+                    return;
+                }
+            }
+        }
+        throw new TermIsNotValueOfType();
     }
 }
