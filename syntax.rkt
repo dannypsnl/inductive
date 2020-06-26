@@ -7,7 +7,8 @@
 (define-type syn:stmt
   (U syn:stmt:type-of
      syn:stmt:inductive))
-;;; (type-of Nat)
+; (type-of z)
+; => Nat
 (struct syn:stmt:type-of syn
   ([term : syn:term]) #:transparent)
 
@@ -17,7 +18,7 @@
 ;   (s : Nat -> Nat))
 (struct syn:stmt:inductive syn
   ([name : String]
-   [constructors : (List syn:constructor)])
+   [constructor* : (List syn:constructor)])
   #:transparent)
 (struct syn:constructor syn
   ([name : String]
@@ -28,7 +29,8 @@
   (U syn:var
      syn:λ))
 (define-type syn:type
-  (U syn:var))
+  (U syn:var
+     syn:arrow))
 ;;; x
 (struct syn:var syn
   ([name : String]) #:transparent)
