@@ -1,40 +1,42 @@
 #lang typed/racket
 
-(struct syntax ([pos : srcloc]) #:transparent)
+(provide (all-defined-out))
 
-(define-type syntax:stmt
-  (U syntax:stmt:type-of
-     syntax:stmt:inductive))
+(struct syn ([pos : srcloc]) #:transparent)
+
+(define-type syn:stmt
+  (U syn:stmt:type-of
+     syn:stmt:inductive))
 ;;; (type-of Nat)
-(struct syntax:stmt:type-of syntax
-  ([term : syntax:term]) #:transparent)
+(struct syn:stmt:type-of syn
+  ([term : syn:term]) #:transparent)
 
 ;;; inductive
 ; (inductive Nat
 ;   (z : Nat)
 ;   (s : Nat -> Nat))
-(struct syntax:stmt:inductive syntax
+(struct syn:stmt:inductive syn
   ([name : String]
-   [constructors : (List syntax:constructor)])
+   [constructors : (List syn:constructor)])
   #:transparent)
-(struct syntax:constructor syntax
+(struct syn:constructor syn
   ([name : String]
-   [typ : syntax:type])
+   [typ : syn:type])
   #:transparent)
 
-(define-type syntax:term
-  (U syntax:var
-     syntax:λ))
-(define-type syntax:type
-  (U syntax:var))
+(define-type syn:term
+  (U syn:var
+     syn:λ))
+(define-type syn:type
+  (U syn:var))
 ;;; x
-(struct syntax:var syntax
+(struct syn:var syn
   ([name : String]) #:transparent)
 ;;; t1 -> t2
-(struct syntax:arrow syntax
-  ([t1 : syntax:type]
-   [t2 : syntax:type]) #:transparent)
-(struct syntax:λ syntax
+(struct syn:arrow syn
+  ([t1 : syn:type]
+   [t2 : syn:type]) #:transparent)
+(struct syn:λ syn
   ([param-name : String]
-   [param-typ : syntax:type]
-   [body : syntax:term]) #:transparent)
+   [param-typ : syn:type]
+   [body : syn:term]) #:transparent)
