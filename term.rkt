@@ -79,5 +79,10 @@
 (define-type context (Listof t))
 
 (module+ test
+  (define pos (make-srcloc 'here 1 0 1 0))
   (run (list
-        (syn:stmt:type-of (make-srcloc 'here 1 0 1 0) (syn:var (make-srcloc 'here 1 0 1 0) "z")))))
+        (syn:stmt:inductive pos "Nat"
+                            (list
+                             (syn:constructor pos "z" (syn:var pos "Nat"))
+                             (syn:constructor pos "s" (syn:arrow pos (syn:var pos "Nat") (syn:var pos "Nat")))))
+        (syn:stmt:type-of pos (syn:var pos "z")))))

@@ -18,7 +18,7 @@
 ;   (s : Nat -> Nat))
 (struct syn:stmt:inductive syn
   ([name : String]
-   [constructor* : (List syn:constructor)])
+   [constructor* : (Listof syn:constructor)])
   #:transparent)
 (struct syn:constructor syn
   ([name : String]
