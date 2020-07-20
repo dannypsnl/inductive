@@ -14,7 +14,7 @@
 (define-language Inductive
   (terminals
    (type (typ))
-   (variable (v c)))
+   (variable (v c tv)))
   (Expr (e)
         v
         (e0 e1)
@@ -35,7 +35,7 @@
   (match ty
     [`(-> ,t1 ,t2)
      (λ (x)
-       (: x (hash-ref ctx t1))
+       (unless (: x (hash-ref ctx t1)) (error (format "type mismatched, expected: ~a, but got: ~a" t1 (t->string x))))
        (t:construction name (list x)))]
     [t (t:construction name '())]))
 
@@ -86,4 +86,8 @@
                        [s (-> Nat Nat)])
             z
             (s z)
-            (s (s z)))))
+            (s (s z))
+            (inductive Bool
+                       [true Bool]
+                       [false Bool])
+            (s true))))
