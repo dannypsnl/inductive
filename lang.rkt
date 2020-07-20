@@ -39,23 +39,25 @@
        (t:construction name (list x)))]
     [t (t:construction name '())]))
 
-(define (expand t)
-  (nanopass-case (Inductive Expr) t
-                 [(inductive ,v
-                             (,c* ,typ*) ...)
-                  (cons `begin (cons
-                   `(define ,v (t:ind ,v ,c*))
-                   (map (λ (c-name c-typ)
-                          `(define c-name (typ->construction c-name c-typ)))
-                        c* typ*)))]
-                 [(,e0 ,e1)
-                  `(,(eval e0) ,(eval e1))]
-                 [,v
-                  `,v]))
+(define-pass expand : (Inductive Expr) (e) -> * ()
+  (Expr : Expr (e) -> * ()
+        [(inductive ,v
+                    (,c* ,typ*) ...)
+         (cons `begin (cons
+                       `(define ,v (t:ind ,v ,c*))
+                       (map (λ (c-name c-typ)
+                              `(define c-name (typ->construction c-name c-typ)))
+                            c* typ*)))]
+        [(,e0 ,e1)
+         `(,(eval e0) ,(eval e1))]
+        [,v
+         `,v]))
 
 (module+ test
   (define-parser ind-parser Inductive)
 
-  (define prog `(inductive Nat [z Nat] [s (-> Nat Nat)]))
-  (ind-parser prog)
-  (expand (ind-parser prog)))
+  (expand (ind-parser `(inductive Nat
+                                  [z Nat]
+                                  [s (-> Nat Nat)])))
+  (expand (ind-parser `z))
+  (expand (ind-parser `(s z))))
