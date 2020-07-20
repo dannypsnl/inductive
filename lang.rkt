@@ -31,11 +31,11 @@
                  expected-c-name))
          (t:ind-constructor* typ)))
 
-(define (typ->construction name ty ctx)
+(define (typ->construction name ty)
   (match ty
     [`(-> ,t1 ,t2)
      (λ (x)
-       (unless (: x (hash-ref ctx t1)) (error (format "type mismatched, expected: ~a, but got: ~a" t1 (t->string x))))
+       (unless (: x t1) (error (format "type mismatched, expected: ~a, but got: ~a" t1 (t->string x))))
        (t:construction name (list x)))]
     [t (t:construction name '())]))
 
@@ -48,46 +48,24 @@
                     #:after-last ")"))]
   [(void) ""])
 
-(define (eval-list t* ctx)
-  (match t*
-    ['() (void)]
-    [(cons h t*)
-     (let ([e (eval h ctx)])
-       (displayln (t->string (car e)))
-       (eval-list t* (cdr e)))]))
-(define (eval t ctx)
+(define (eval t)
   (nanopass-case (Inductive Expr) t
                  [(inductive ,v
                              (,c* ,typ*) ...)
-                  (let ([ctx (foldl (λ (c-name c-typ ctx)
-                                      (hash-set ctx
-                                                c-name
-                                                (typ->construction c-name c-typ ctx)))
-                                    (hash-set ctx v (t:ind v
-                                                           c*))
-                                    c*
-                                    typ*)])
-                    (cons void ctx))]
+                  (cons `begin (cons
+                   `(define ,v (t:ind ,v ,c*))
+                   (map (λ (c-name c-typ)
+                          `(define c-name (typ->construction c-name c-typ)))
+                        c* typ*)))]
                  [(,e0 ,e1)
-                  (let* ([e0 (eval e0 ctx)]
-                         [e1 (eval e1 (cdr e0))])
-                    (cons ((car e0) (car e1)) (cdr e1)))]
+                  `(,(eval e0) ,(eval e1))]
                  [,v
-                  (cons (hash-ref ctx v) ctx)]))
+                  `,v]))
 
 (module+ test
   (define-parser ind-parser Inductive)
 
-  (define (eval-t t*)
-    (eval-list (map (λ (t) (ind-parser t)) t*) (make-immutable-hash)))
+  (define (eval-result t)
+    (eval (ind-parser t)))
 
-  (eval-t '((inductive Nat
-                       [z Nat]
-                       [s (-> Nat Nat)])
-            z
-            (s z)
-            (s (s z))
-            (inductive Bool
-                       [true Bool]
-                       [false Bool])
-            (s true))))
+  (eval-result `(inductive Nat [z Nat] [s (-> Nat Nat)])))
