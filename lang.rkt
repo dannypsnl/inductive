@@ -1,5 +1,6 @@
 #lang nanopass
 
+(require "core.rkt")
 (module+ test
   (require rackunit))
 
@@ -17,27 +18,8 @@
    (variable (v c tv)))
   (Expr (e)
         v
-        (e0 e1)
+        (e0 e1* ...)
         (inductive v (c* typ*) ...)))
-
-(struct t:ind (name constructor*) #:transparent)
-(struct t:construction
-  (name arg*) #:transparent)
-(define (: tm typ)
-  (unless (t:ind? typ) (error "unknown type"))
-  (unless (t:construction? tm) (error "unknown term"))
-  (ormap (λ (expected-c-name)
-           (eqv? (t:construction-name tm)
-                 expected-c-name))
-         (t:ind-constructor* typ)))
-
-(define (typ->construction name ty)
-  (match ty
-    [`(-> ,t1 ,t2)
-     (λ (x)
-       (unless (: x t1) (error (format "type mismatched, expected: ~a, but got: ~a" t1 x)))
-       (t:construction name (list x)))]
-    [t (t:construction name '())]))
 
 (define-pass expand : (Inductive Expr) (e) -> * ()
   (Expr : Expr (e) -> * ()
@@ -48,8 +30,8 @@
                        (map (λ (c-name c-typ)
                               `(define c-name (typ->construction c-name c-typ)))
                             c* typ*)))]
-        [(,e0 ,e1)
-         `(,(eval e0) ,(eval e1))]
+        [(,e0 ,e1* ...)
+         `(,(eval e0) ,(map eval e1*))]
         [,v
          `,v]))
 
