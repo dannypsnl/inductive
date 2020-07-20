@@ -35,20 +35,11 @@
   (match ty
     [`(-> ,t1 ,t2)
      (λ (x)
-       (unless (: x t1) (error (format "type mismatched, expected: ~a, but got: ~a" t1 (t->string x))))
+       (unless (: x t1) (error (format "type mismatched, expected: ~a, but got: ~a" t1 x)))
        (t:construction name (list x)))]
     [t (t:construction name '())]))
 
-(define/match (t->string t)
-  [((t:construction name arg*))
-   (if (empty? arg*)
-       (symbol->string name)
-       (string-join (cons (symbol->string name) (map t->string arg*)) " "
-                    #:before-first "("
-                    #:after-last ")"))]
-  [(void) ""])
-
-(define (eval t)
+(define (expand t)
   (nanopass-case (Inductive Expr) t
                  [(inductive ,v
                              (,c* ,typ*) ...)
@@ -65,7 +56,6 @@
 (module+ test
   (define-parser ind-parser Inductive)
 
-  (define (eval-result t)
-    (eval (ind-parser t)))
-
-  (eval-result `(inductive Nat [z Nat] [s (-> Nat Nat)])))
+  (define prog `(inductive Nat [z Nat] [s (-> Nat Nat)]))
+  (ind-parser prog)
+  (expand (ind-parser prog)))
