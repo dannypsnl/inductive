@@ -52,14 +52,23 @@
   (Expr : Expr (e) -> Expr ()
         [(inductive ,v
                     (,c* ,typ*) ...)
+         (define (constructor* c* typ*)
+           (match c*
+             [(cons c '()) `,(constructor c (car typ*))]
+             [(cons c c*)
+              `(begin ,(constructor c (car typ*))
+                ,(constructor* c* (cdr typ*)))]))
+         (define (constructor c typ)
+           `(define ,c
+              ,(match typ
+                 [`(-> ,t1 ,t2)
+                  `(λ (x)
+                     (unless (: x ,t1) (error (format "type mismatched, expected: ~a, but got: ~a" ,t1 x)))
+                     (t:construction ',c (list x)))]
+                 [t `(t:construction ',c '())])))
          `(begin
-            (define ,v (t:ind ,v ',c*))
-            (define ,(car c*) ,(match (car typ*)
-                           [`(-> ,t1 ,t2)
-                            `(λ (x)
-                               (unless (: x ,t1) (error (format "type mismatched, expected: ~a, but got: ~a" ,t1 x)))
-                               (t:construction ,(car c*) (list x)))]
-                           [t `(t:construction ,(car c*) '())])) ...)])
+            (define ,v (t:ind ',v ',c*))
+            ,(constructor* c* typ*) ...)])
   (Expr e))
 
 (module+ test
