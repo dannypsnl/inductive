@@ -12,11 +12,3 @@
            (eqv? (t:construction-name tm)
                  expected-c-name))
          (t:ind-constructor* typ)))
-
-(define (typ->construction name ty)
-  (match ty
-    [`(-> ,t1 ,t2)
-     (λ (x)
-       (unless (: x t1) (error (format "type mismatched, expected: ~a, but got: ~a" t1 x)))
-       (t:construction name (list x)))]
-    [t (t:construction name '())]))
