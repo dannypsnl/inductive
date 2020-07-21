@@ -6,6 +6,7 @@
 
 z
 (s z)
+(s (s z))
 
 (inductive Bool
            [true Bool]

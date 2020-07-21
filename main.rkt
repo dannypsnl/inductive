@@ -31,8 +31,8 @@
                              (λ (x)
                                (define t (lookup ctx t1))
                                (: x t)
-                               (t:construction v c (list x)))]
-                            [t (t:construction v c '())])))
+                               (t:construction (lookup ctx v) c (list x)))]
+                            [t (t:construction (lookup ctx v) c '())])))
                   (bind ctx v (t:ind v c*))
                   (for-each constructor
                             c*
@@ -48,7 +48,7 @@
    (define all-form (list (eval `EXPR ctx) ...))
    (for-each (λ (form)
                (if form
-                   (displayln form)
+                   (displayln (pretty form))
                    (void)))
              all-form)))
 
