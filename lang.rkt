@@ -52,22 +52,14 @@
   (Expr : Expr (e) -> Expr ()
         [(inductive ,v
                     (,c* ,typ*) ...)
-         (let ([constructor*
-                (map (λ (c-name c-typ)
-                       (displayln c-typ)
-                       `(define ,c-name
-                          ,(match c-typ
-                             [`(-> ,t1 ,t2)
-                              `(λ (x)
-                                 (unless (: x ,t1) (error (format "type mismatched, expected: ~a, but got: ~a" ,t1 x)))
-                                 (t:construction ,c-name (list x)))]
-                             [t `(t:construction c-name '())])))
-                     c* typ*)])
-           `(begin
-              (define ,v (t:ind ,v ',c*))
-              ,constructor* ...))]
-        [(,e ,e* ...)
-         `(,e ,e* ...)])
+         `(begin
+            (define ,v (t:ind ,v ',c*))
+            (define ,(car c*) ,(match (car typ*)
+                           [`(-> ,t1 ,t2)
+                            `(λ (x)
+                               (unless (: x ,t1) (error (format "type mismatched, expected: ~a, but got: ~a" ,t1 x)))
+                               (t:construction ,(car c*) (list x)))]
+                           [t `(t:construction ,(car c*) '())])) ...)])
   (Expr e))
 
 (module+ test
