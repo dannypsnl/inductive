@@ -7,30 +7,42 @@
 (require (for-syntax syntax/parse)
          racket/syntax
          syntax/stx)
-(require "lang.rkt")
+(require "lang.rkt"
+         "core.rkt")
 
 (define (eval e)
-  ;(displayln (ind-parser e))
-  (expand
-   (ind-parser e)))
-
-(define-syntax (run stx)
-  (syntax-parse stx
-    [`((~literal inductive) v (c* typ*) ...)
-     #'(eval '(inductive v (c* typ*) ...))]
-    [`(e e* ...)
-     #'(eval '(e e* ...))]
-    [`v:id #'(eval 'v)]))
+  (match e
+    [`(begin ,b* ... ,b)
+     (map eval b*)
+     (eval b)]
+    [`(define ,v ,e)
+     (define v (eval e))
+     #f]
+    [`(λ (,x* ...) ,b* ... ,b)
+     (λ (x*)
+       (map eval b*)
+       (eval b))]
+    [`'(,e* ...) e]
+    [`(t:construction ,arg* ...)
+     (apply t:construction (map eval arg*))]
+    [`(t:ind ,arg* ...)
+     (apply t:ind (map eval arg*))]
+    [`(,f ,arg* ...)
+     (apply (eval f) (map eval arg*))]
+    [`,v v]))
 
 (define-syntax-rule (module-begin EXPR ...)
   (#%module-begin
-   (define all-form (list (run EXPR) ...))
+   (define all-form (list (expand `EXPR) ...))
    (for-each (λ (form)
-               (displayln form))
+               (let ([result (eval form)])
+                 (if result
+                     (displayln result)
+                     (void))))
              all-form)))
 
 (define-syntax-rule (top-interaction . exp)
-  (run exp))
+  (eval (expand `exp)))
 
 (module reader syntax/module-reader
   inductive)

@@ -5,3 +5,4 @@
            [s (-> Nat Nat)])
 
 z
+(s z)
