@@ -57,7 +57,7 @@
              [(cons c '()) `,(constructor c (car typ*))]
              [(cons c c*)
               `(begin ,(constructor c (car typ*))
-                ,(constructor* c* (cdr typ*)))]))
+                      ,(constructor* c* (cdr typ*)))]))
          (define (constructor c typ)
            `(define ,c
               ,(match typ
