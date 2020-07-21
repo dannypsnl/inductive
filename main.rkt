@@ -15,6 +15,8 @@
   #:mutable
   #:transparent)
 (define (bind ctx v x)
+  (unless (not (hash-ref (context-map ctx) v (λ () #f)))
+    (error (format "redefined: ~a" v)))
   (set-context-map! ctx
                     (hash-set (context-map ctx) v x)))
 (define (lookup ctx v)
