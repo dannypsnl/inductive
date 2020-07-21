@@ -6,3 +6,8 @@
 
 z
 (s z)
+
+(inductive Bool
+           [true Bool]
+           [false Bool])
+

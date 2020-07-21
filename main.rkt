@@ -7,38 +7,55 @@
 (require (for-syntax syntax/parse)
          racket/syntax
          syntax/stx)
+(require nanopass)
 (require "lang.rkt"
          "core.rkt")
 
-(define (eval e)
-  (match e
-    [`(begin ,b* ... ,b)
-     (map eval b*)
-     (eval b)]
-    [`(define ,v ,e)
-     (define v (eval e))
-     #f]
-    [`(λ (,x* ...) ,b* ... ,b)
-     (λ (x*)
-       (map eval b*)
-       (eval b))]
-    [`'(,e* ...) e]
-    [`(',f ,arg* ...)
-     (apply (eval f) (map eval arg*))]
-    [`,c c]))
+(struct context (map)
+  #:mutable
+  #:transparent)
+(define (bind ctx v x)
+  (set-context-map! ctx
+                    (hash-set (context-map ctx) v x)))
+(define (lookup ctx v)
+  (hash-ref (context-map ctx) v))
+
+(define (eval e ctx)
+  (nanopass-case (Inductive Expr) (ind-parser e)
+                 [(inductive ,v (,c* ,typ*) ...)
+                  (define (constructor c typ)
+                    (bind ctx
+                          c
+                          (match typ
+                            [`(-> ,t1 ,t2)
+                             (λ (x)
+                               (define t (lookup ctx t1))
+                               (: x t)
+                               (t:construction v c (list x)))]
+                            [t (t:construction v c '())])))
+                  (bind ctx v (t:ind v c*))
+                  (for-each constructor
+                            c*
+                            typ*)
+                  #f]
+                 [(,[e0] ,[e1] ...)
+                  (apply e0 e1)]
+                 [,v (lookup ctx v)]))
 
 (define-syntax-rule (module-begin EXPR ...)
   (#%module-begin
-   (define all-form (list (expand `EXPR) ...))
+   (define ctx (context (make-immutable-hash)))
+   (define all-form (list (eval `EXPR ctx) ...))
    (for-each (λ (form)
-               (let ([result (eval form)])
-                 (if result
-                     (displayln result)
-                     (void))))
+               (if form
+                   (displayln form)
+                   (void)))
              all-form)))
 
 (define-syntax-rule (top-interaction . exp)
-  (eval (expand `exp)))
+  (begin
+    (define ctx (context (make-immutable-hash)))
+    (eval `exp ctx)))
 
 (module reader syntax/module-reader
   inductive)
