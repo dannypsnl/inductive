@@ -1,5 +1,7 @@
 #lang nanopass
 
+(provide (all-defined-out))
+
 (require "core.rkt")
 (module+ test
   (require rackunit))
@@ -26,6 +28,8 @@
         v
         (inductive v (c* typ*) ...)
         (e e* ...)))
+
+(define-parser ind-parser Inductive)
 
 (define-language Racket
   (terminals
@@ -72,8 +76,6 @@
   (Expr e))
 
 (module+ test
-  (define-parser ind-parser Inductive)
-
   (expand (ind-parser `(inductive Nat
                                   [z Nat]
                                   [s (-> Nat Nat)])))
