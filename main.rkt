@@ -23,13 +23,9 @@
        (map eval b*)
        (eval b))]
     [`'(,e* ...) e]
-    [`(t:construction ,arg* ...)
-     (apply t:construction (map eval arg*))]
-    [`(t:ind ,arg* ...)
-     (apply t:ind (map eval arg*))]
-    [`(,f ,arg* ...)
+    [`(',f ,arg* ...)
      (apply (eval f) (map eval arg*))]
-    [`,v v]))
+    [`,c c]))
 
 (define-syntax-rule (module-begin EXPR ...)
   (#%module-begin

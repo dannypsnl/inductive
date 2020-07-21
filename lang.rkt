@@ -49,7 +49,7 @@
                               (t:construction ,c (list x)))]
                           [t `(t:construction ,c '())])))
                   `(begin
-                     (define ,v (t:ind ,v ',c*))
+                     (define ,v (t:ind ,(symbol->string v) ',c*))
                      ,(constructor* c* typ*))]
                  [(,[e0] ,[e1] ...) `,e]
                  [,v `,v]))
