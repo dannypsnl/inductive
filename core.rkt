@@ -2,7 +2,7 @@
 
 (provide (all-defined-out))
 
-(struct t:ind (name constructor*) #:transparent)
+(struct t:ind (name) #:transparent)
 (struct t:construction
   (typ name arg*) #:transparent)
 (define (: tm typ)
@@ -28,8 +28,4 @@
                    #:after-last ")"))
               (pretty typ))
         " : "))]
-    [(t:ind n _)
-     (string-join (list
-                   (symbol->string n)
-                   "Type")
-                  " : ")]))
+    [(t:ind n) (symbol->string n)]))
