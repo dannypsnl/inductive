@@ -23,25 +23,34 @@
   (hash-ref (context-map ctx) v))
 
 (define (eval e ctx)
-  (nanopass-case (Inductive Expr) (ind-parser e)
-                 [(inductive ,v (,c* ,typ*) ...)
-                  (define (constructor c typ)
-                    (bind ctx
-                          c
-                          (match typ
-                            [`(-> ,t1 ,t2)
-                             (λ (x)
-                               (: x (lookup ctx t1))
-                               (t:construction (lookup ctx v) c (list x)))]
-                            [t (t:construction (lookup ctx v) c '())])))
-                  (bind ctx v (t:ind v))
-                  (for-each constructor
-                            c*
-                            typ*)
-                  #f]
-                 [(,[e0] ,[e1] ...)
-                  (apply e0 e1)]
-                 [,v (lookup ctx v)]))
+  (nanopass-case
+   (Inductive Expr) (ind-parser e)
+   [(inductive ,v (,c* ,typ*) ...)
+    (define (constructor c typ)
+      (bind ctx
+            c
+            (nanopass-case
+             (Inductive Type) typ
+             [(-> ,typ* ... ,typ)
+              (λ (x)
+                (let ([x (cond
+                           [(list? x) (for-each (λ (x t)
+                                                  (: x (lookup ctx t)))
+                                                x
+                                                typ*)
+                                      x]
+                           [else (: x (lookup ctx (car typ*)))
+                                 (list x)])])
+                  (t:construction (lookup ctx v) c x)))]
+             [else (t:construction (lookup ctx v) c '())])))
+    (bind ctx v (t:ind v))
+    (for-each constructor
+              c*
+              typ*)
+    #f]
+   [(,[e0] ,[e1] ...)
+    (apply e0 e1)]
+   [,v (lookup ctx v)]))
 
 (define-syntax-rule (module-begin EXPR ...)
   (#%module-begin

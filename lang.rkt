@@ -6,12 +6,6 @@
   (require rackunit))
 
 (define variable? symbol?)
-(define/match (type? t)
-  [(`(-> ,t1 ,t2))
-   #:when (and (type? t1) (type? t2))
-   #t]
-  [(t) #:when (variable? t)
-       #t])
 (define (constant? x)
   (or (number? x)
       (char? x)
@@ -21,11 +15,13 @@
 
 (define-language Inductive
   (terminals
-   (type (typ))
    (variable (v c)))
   (Expr (e)
         v
         (inductive v (c* typ*) ...)
-        (e0 e1 ...)))
+        (e0 e1 ...))
+  (Type (typ)
+        v
+        (-> typ* ... typ)))
 
 (define-parser ind-parser Inductive)
