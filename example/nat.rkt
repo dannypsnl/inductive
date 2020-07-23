@@ -8,6 +8,8 @@ z
 (s z)
 (s (s z))
 
+Nat
+
 (inductive Bool
            [true Bool]
            [false Bool])

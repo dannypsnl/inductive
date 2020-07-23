@@ -29,4 +29,7 @@
               (pretty typ))
         " : "))]
     [(t:ind n _)
-     (symbol->string n)]))
+     (string-join (list
+                   (symbol->string n)
+                   "Type")
+                  " : ")]))
