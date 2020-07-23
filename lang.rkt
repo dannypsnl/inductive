@@ -29,10 +29,3 @@
         (e0 e1 ...)))
 
 (define-parser ind-parser Inductive)
-
-(module+ test
-  (expand `(inductive Nat
-                      [z Nat]
-                      [s (-> Nat Nat)]))
-  (expand `z)
-  (expand `(s z)))

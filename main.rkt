@@ -31,8 +31,7 @@
                           (match typ
                             [`(-> ,t1 ,t2)
                              (λ (x)
-                               (define t (lookup ctx t1))
-                               (: x t)
+                               (: x (lookup ctx t1))
                                (t:construction (lookup ctx v) c (list x)))]
                             [t (t:construction (lookup ctx v) c '())])))
                   (bind ctx v (t:ind v c*))
