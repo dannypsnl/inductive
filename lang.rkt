@@ -23,6 +23,7 @@
         (e0 e1 ...))
   (Type (typ)
         v
-        (-> typ* ... typ)))
+        (-> typ* ... typ)
+        (typ typ* ...)))
 
 (define-parser ind-parser Inductive)
