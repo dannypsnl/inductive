@@ -18,7 +18,8 @@
    (variable (v c)))
   (Expr (e)
         v
-        (inductive v (c* typ*) ...)
+        (inductive v ([c0* typ0*] ...)
+                     (c1* typ1*) ...)
         (e0 e1 ...))
   (Type (typ)
         v

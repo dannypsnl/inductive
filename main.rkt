@@ -25,7 +25,7 @@
 (define (eval e ctx)
   (nanopass-case
    (Inductive Expr) (ind-parser e)
-   [(inductive ,v (,c* ,typ*) ...)
+   [(inductive ,v ([,c0* ,typ0*] ...) (,c1* ,typ1*) ...)
     (define (constructor c typ)
       (bind ctx
             c
@@ -45,8 +45,8 @@
              [else (t:construction (lookup ctx v) c '())])))
     (bind ctx v (t:ind v))
     (for-each constructor
-              c*
-              typ*)
+              c1*
+              typ1*)
     #f]
    [(,[e0] ,[e1] ...)
     (apply e0 e1)]
