@@ -29,16 +29,17 @@
          (Inductive Type) typ
          [(-> ,typ* ... ,typ)
           (λ (x)
-            (let ([x (cond
-                       [(list? x) (for-each (λ (x t)
-                                              (: x (lookup ctx t)))
-                                            x
-                                            typ*)
-                                  x]
-                       [else (: x (lookup ctx (car typ*)))
-                             (list x)])])
-              (t:construction (lookup ctx v) c x)))]
-         [else (t:construction (lookup ctx v) c '())])))
+            (let ([x (match x
+                       [`(the ,typ ,name ,arg*)
+                        (: x (lookup ctx (car typ*)))
+                        (list x)]
+                       [x* #:when (list? x*)
+                           (for ([x x*]
+                                 [t typ*])
+                             (: x (lookup ctx t)))
+                           x*])])
+              `(the ,(lookup ctx v) ,c ,x)))]
+         [else `(the ,(lookup ctx v) ,c ,'())])))
 
 (define (eval e ctx)
   (nanopass-case

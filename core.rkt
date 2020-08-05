@@ -2,19 +2,18 @@
 
 (provide (all-defined-out))
 
-(struct t:construction
-  (typ name arg*) #:transparent)
 (define (: tm typ)
-  (unless (t:construction? tm) (error "unknown term: ~a" tm))
-  (let ([x (t:construction-typ tm)]
-        [t typ])
-    (unless (eqv? x t)
-      (error (format "type mismatched, expected: ~a, but got: ~a" t x))))
-  (void))
+  (match tm
+    [`(the ,x ,name ,arg*)
+     (unless (eqv? x typ)
+       (error (format "type mismatched, expected: ~a, but got: ~a" typ x)))]
+    [else
+     (displayln tm)
+     (error "unknown term: ~a" tm)]))
 
 (define (pretty t)
   (match t
-    [(t:construction typ name arg*)
+    [`(the ,typ ,name ,arg*)
      (let ([name (symbol->string name)])
        (string-join
         (list (if (empty? arg*)
