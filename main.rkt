@@ -44,13 +44,13 @@
   (nanopass-case
    (Inductive Expr) (ind-parser e)
    [(inductive ,v (,c* ,typ*) ...)
-    (bind ctx v (t:ind v))
+    (bind ctx v v)
     (for ([c c*]
           [typ typ*])
       (constructor c typ v ctx))
     #f]
    [(inductive ,v ([,c0* ,typ0*] ...) (,c1* ,typ1*) ...)
-    (bind ctx v (t:ind v))
+    (bind ctx v v)
     (for ([c c1*]
           [typ typ1*])
       (constructor c typ v ctx))
