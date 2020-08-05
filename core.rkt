@@ -4,25 +4,32 @@
 
 (define (: tm typ)
   (match tm
-    [`(the ,x ,name ,arg*)
-     (unless (eqv? x typ)
-       (error (format "type mismatched, expected: ~a, but got: ~a" typ x)))]
-    [else
-     (displayln tm)
-     (error "unknown term: ~a" tm)]))
+    [tm #:when (pair? tm)
+        (let ([x (cdr tm)]
+              [name (caar tm)])
+          (unless (eqv? x typ)
+            (error (format "type mismatched, expected: ~a, but got: ~a" typ x))))]
+    [else (error (format "unknown term: ~a" tm))]))
 
 (define (pretty t)
   (match t
-    [`(the ,typ ,name ,arg*)
+    [`((,name . ,arg*) . ,typ)
      (let ([name (symbol->string name)])
-       (string-join
-        (list (if (empty? arg*)
-                  name
-                  (string-join
-                   (cons name (map pretty arg*))
-                   " "
-                   #:before-first "("
-                   #:after-last ")"))
-              (pretty typ))
-        " : "))]
-    [n (symbol->string n)]))
+       (format "~a : ~a"
+               (if (empty? arg*)
+                   name
+                   (string-join
+                    (cons name (map pretty arg*))
+                    " "
+                    #:before-first "("
+                    #:after-last ")"))
+               (pretty-proc typ)))]))
+(define (pretty-proc t)
+    (if (procedure? t)
+        (pretty-proc (t (build-list (procedure-arity t)
+                       (λ (x) (cons (cons (gensym '?) '()) 'Type)))))
+        (cond
+          [(pair? t) (if (empty? (rest (car t)))
+                         (caar t)
+                         (list (caar t) (pretty-proc (cadar t))))]
+          [else t])))

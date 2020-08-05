@@ -18,6 +18,6 @@ true
 
 (inductive List ([a Type])
            [nil (List a)]
-           [:: (-> a (List a))])
+           [:: (-> a (List a) (List a))])
 
 nil
