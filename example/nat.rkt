@@ -21,3 +21,4 @@ true
            [:: (-> a (List a) (List a))])
 
 nil
+(:: z nil)
