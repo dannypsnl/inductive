@@ -1,6 +1,6 @@
 #lang inductive
 
-(inductive Nat ()
+(inductive Nat
            [z Nat]
            [s (-> Nat Nat)])
 
@@ -10,7 +10,7 @@ z
 
 Nat
 
-(inductive Bool ()
+(inductive Bool
            [true Bool]
            [false Bool])
 

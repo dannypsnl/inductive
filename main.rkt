@@ -22,31 +22,38 @@
 (define (lookup ctx v)
   (hash-ref (context-map ctx) v))
 
+(define (constructor c typ v ctx)
+  (bind ctx
+        c
+        (nanopass-case
+         (Inductive Type) typ
+         [(-> ,typ* ... ,typ)
+          (λ (x)
+            (let ([x (cond
+                       [(list? x) (for-each (λ (x t)
+                                              (: x (lookup ctx t)))
+                                            x
+                                            typ*)
+                                  x]
+                       [else (: x (lookup ctx (car typ*)))
+                             (list x)])])
+              (t:construction (lookup ctx v) c x)))]
+         [else (t:construction (lookup ctx v) c '())])))
+
 (define (eval e ctx)
   (nanopass-case
    (Inductive Expr) (ind-parser e)
-   [(inductive ,v ([,c0* ,typ0*] ...) (,c1* ,typ1*) ...)
-    (define (constructor c typ)
-      (bind ctx
-            c
-            (nanopass-case
-             (Inductive Type) typ
-             [(-> ,typ* ... ,typ)
-              (λ (x)
-                (let ([x (cond
-                           [(list? x) (for-each (λ (x t)
-                                                  (: x (lookup ctx t)))
-                                                x
-                                                typ*)
-                                      x]
-                           [else (: x (lookup ctx (car typ*)))
-                                 (list x)])])
-                  (t:construction (lookup ctx v) c x)))]
-             [else (t:construction (lookup ctx v) c '())])))
+   [(inductive ,v (,c* ,typ*) ...)
     (bind ctx v (t:ind v))
-    (for-each constructor
-              c1*
-              typ1*)
+    (for ([c c*]
+          [typ typ*])
+      (constructor c typ v ctx))
+    #f]
+   [(inductive ,v ([,c0* ,typ0*] ...) (,c1* ,typ1*) ...)
+    (bind ctx v (t:ind v))
+    (for ([c c1*]
+          [typ typ1*])
+      (constructor c typ v ctx))
     #f]
    [(,[e0] ,[e1] ...)
     (apply e0 e1)]
