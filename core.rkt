@@ -63,8 +63,9 @@
      (pretty-proc (t (build-list (procedure-arity t)
                                  (λ (x) (cons (cons (make-parameter (gensym '?)) '()) 'Type)))))]
     [(pair? t)
-     (let ([p (pretty-proc (caar t))])
-       (if (empty? (rest (car t)))
-         p
-         `(,p ,(pretty-proc (cadar t)))))]
+     (if (empty? (rest (car t)))
+         (pretty-proc (caar t))
+         (let ([t2 (cadar t)])
+           ;;; TODO: unify t2 with memorized type
+           `(,(pretty-proc (caar t)) ,(pretty-proc t2))))]
     [else t]))
