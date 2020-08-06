@@ -1,6 +1,6 @@
 #lang racket
 
-(provide : pretty)
+(provide : unify pretty)
 
 (define (occurs v t)
   (match t
@@ -16,6 +16,12 @@
             (t2 t1)
             #t]
     [(t1 _) #:when (parameter? t1)
+            (unify t2 t1)]
+    [(_ t2) #:when (procedure? t2)
+            (unify (t2 (build-list (procedure-arity t2)
+                                   (λ (x) (cons (cons (make-parameter (gensym '?)) '()) 'Type))))
+                   t1)]
+    [(t1 _) #:when (procedure? t1)
             (unify t2 t1)]
     [(`(,a . ,a2)
       `(,b . ,b2))
@@ -51,11 +57,14 @@
                     #:after-last ")"))
                (pretty-proc typ)))]))
 (define (pretty-proc t)
-  (if (procedure? t)
-      (pretty-proc (t (build-list (procedure-arity t)
-                                  (λ (x) (cons (cons (make-parameter (gensym '?)) '()) 'Type)))))
-      (cond
-        [(pair? t) (if (empty? (rest (car t)))
-                       (caar t)
-                       (list (caar t) (pretty-proc (cadar t))))]
-        [else t])))
+  (cond
+    [(parameter? t) (t)]
+    [(procedure? t)
+     (pretty-proc (t (build-list (procedure-arity t)
+                                 (λ (x) (cons (cons (make-parameter (gensym '?)) '()) 'Type)))))]
+    [(pair? t)
+     (let ([p (pretty-proc (caar t))])
+       (if (empty? (rest (car t)))
+         p
+         `(,p ,(pretty-proc (cadar t)))))]
+    [else t]))
