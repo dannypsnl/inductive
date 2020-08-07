@@ -51,14 +51,8 @@
 (define (eval e ctx)
   (nanopass-case
    (Inductive Expr) (ind-parser e)
-   [(inductive ,v (,c* ,typ*) ...)
-    (bind ctx v (cons (cons v '()) 'Type))
-    (for ([c c*]
-          [typ typ*])
-      (constructor c typ v ctx))
-    #f]
-   [(inductive ,v ([,c0* ,typ0*] ...)
-               (,c1* ,typ1*) ...)
+   [(ind (,v [,c0* ,typ0*] ...)
+         (,c1* ,typ1*) ...)
     (bind ctx v (λ (x*)
                   (for ([x x*]
                         [t typ0*])
@@ -69,6 +63,12 @@
       (bind ctx c (cons (cons (make-parameter c) '()) (lookup/type ctx typ))))
     (for ([c c1*]
           [typ typ1*])
+      (constructor c typ v ctx))
+    #f]
+   [(ind ,v (,c* ,typ*) ...)
+    (bind ctx v (cons (cons v '()) 'Type))
+    (for ([c c*]
+          [typ typ*])
       (constructor c typ v ctx))
     #f]
    [(,[e0] ,[e1] ...)
