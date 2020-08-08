@@ -8,12 +8,17 @@
      (ormap (λ (t) (occurs v t)) t*)]
     (t (equal? v t))))
 
+(define (param-get t)
+  (if (parameter? t)
+      (param-get (t))
+      t))
+
 (define (unify t1 t2)
   (match* (t1 t2)
     [(_ t2) #:when (parameter? t2)
-            (unless (or (eqv? t1 (t2)) (not (occurs (t2) t1)))
-              (error (format "~a occurs in ~a" (t2) t1)))
-            (t2 t1)
+            (unless (or (eqv? t1 (t2)) (not (occurs (param-get t2) t1)))
+              (error (format "~a occurs in ~a" (param-get t2) (param-get t1))))
+            (t2 (param-get t1))
             #t]
     [(t1 _) #:when (parameter? t1)
             (unify t2 t1)]
@@ -25,8 +30,8 @@
             (unify t2 t1)]
     [(`(,a . ,a2)
       `(,b . ,b2))
-     (and (unify a b)
-          (unify a2 b2))]
+     (and (unify a2 b2)
+          (unify a b))]
     [(`(,a* ...) `(,b* ...))
      (andmap unify a* b*)]
     [(_ _)
@@ -59,7 +64,7 @@
     [t (pretty-proc t)]))
 (define (pretty-proc t)
   (cond
-    [(parameter? t) (t)]
+    [(parameter? t) (pretty-proc (t))]
     [(procedure? t)
      (pretty-proc (t (build-list (procedure-arity t)
                                  (λ (x) (cons (cons (make-parameter (gensym '?)) '()) 'Type)))))]
@@ -69,4 +74,5 @@
          (let ([t2 (cadar t)])
            ;;; TODO: unify t2 with memorized type
            `(,(pretty-proc (caar t)) ,(pretty-proc t2))))]
+    [(list? t) (map pretty-proc t)]
     [else t]))

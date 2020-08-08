@@ -65,8 +65,10 @@
     (let ([new-ctx (context/new #:parent ctx)])
       (bind ctx v (λ (x*)
                     (for ([x x*]
+                          [c c0*]
                           [t typ0*])
-                      (: x (lookup/type new-ctx t)))
+                      (: x (lookup/type new-ctx t))
+                      (unify (lookup new-ctx c) x))
                     (cons (cons v x*) 'Type)))
       (for ([c c0*]
             [typ typ0*])
@@ -86,8 +88,6 @@
    [(,[e0] ,[e1] ...)
     (e0 e1)]
    [,v (lookup ctx v)]))
-;(require racket/trace)
-;(trace eval)
 
 (define-syntax-rule (module-begin EXPR ...)
   (#%module-begin
