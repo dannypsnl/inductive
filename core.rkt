@@ -55,7 +55,8 @@
                     " "
                     #:before-first "("
                     #:after-last ")"))
-               (pretty-proc typ)))]))
+               (pretty-proc typ)))]
+    [t (pretty-proc t)]))
 (define (pretty-proc t)
   (cond
     [(parameter? t) (t)]

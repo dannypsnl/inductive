@@ -41,7 +41,7 @@
      (map (λ (t) (lookup ctx t)) typ*))]
    [else (lookup ctx typ)]))
 
-(define (constructor c typ v ctx)
+(define (constructor c typ v ctx [new-ctx ctx])
   (bind ctx
         c
         (nanopass-case
@@ -50,9 +50,9 @@
           (λ (x*)
             (for ([x x*]
                   [t typ*])
-              (: x (lookup/type ctx t)))
-            (cons (cons c x*) (lookup/type ctx v)))]
-         [else (cons (cons c '()) (lookup/type ctx v))])))
+              (: x (lookup/type new-ctx t)))
+            (cons (cons c x*) (lookup/type new-ctx v)))]
+         [else (cons (cons c '()) (lookup/type new-ctx v))])))
 
 (define (eval e ctx)
   (nanopass-case
@@ -70,10 +70,10 @@
                     (cons (cons v x*) 'Type)))
       (for ([c c0*]
             [typ typ0*])
-        (bind new-ctx c (cons (cons (make-parameter c) '()) (lookup/type ctx typ)))))
-    (for ([c c1*]
-          [typ typ1*])
-      (constructor c typ v ctx))
+        (bind new-ctx c (cons (cons (make-parameter c) '()) (lookup/type new-ctx typ))))
+      (for ([c c1*]
+            [typ typ1*])
+        (constructor c typ v ctx new-ctx)))
     #f]
    [(ind ,v ; name
          ; constructor*
@@ -86,8 +86,8 @@
    [(,[e0] ,[e1] ...)
     (e0 e1)]
    [,v (lookup ctx v)]))
-(require racket/trace)
-(trace eval)
+;(require racket/trace)
+;(trace eval)
 
 (define-syntax-rule (module-begin EXPR ...)
   (#%module-begin
