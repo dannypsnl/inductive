@@ -11,16 +11,22 @@
 (require "lang.rkt"
          "core.rkt")
 
-(struct context (map)
+(struct context (parent map)
   #:mutable
   #:transparent)
+(define (context/new #:parent [parent #f])
+  (context parent (make-immutable-hash)))
 (define (bind ctx v x)
   (unless (not (hash-ref (context-map ctx) v (λ () #f)))
     (error (format "redefined: ~a" v)))
   (set-context-map! ctx
                     (hash-set (context-map ctx) v x)))
 (define (lookup ctx v)
-  (hash-ref (context-map ctx) v))
+  (let ([r (hash-ref (context-map ctx) v
+                     (λ () (if (context-parent ctx)
+                               (lookup (context-parent ctx) v)
+                               (raise (format "no variable named: ~a" v)))))])
+    r))
 (define (lookup/type ctx typ)
   (nanopass-case
    (Inductive Type) typ
@@ -51,21 +57,27 @@
 (define (eval e ctx)
   (nanopass-case
    (Inductive Expr) (ind-parser e)
-   [(ind (,v [,c0* ,typ0*] ...)
-         (,c1* ,typ1*) ...)
-    (bind ctx v (λ (x*)
-                  (for ([x x*]
-                        [t typ0*])
-                    (: x (lookup/type ctx t)))
-                  (cons (cons v x*) 'Type)))
-    (for ([c c0*]
-          [typ typ0*])
-      (bind ctx c (cons (cons (make-parameter c) '()) (lookup/type ctx typ))))
+   [(ind
+     ; (name [dependent-type*])
+     (,v [,c0* ,typ0*] ...)
+     ; constructor*
+     (,c1* ,typ1*) ...)
+    (let ([new-ctx (context/new #:parent ctx)])
+      (bind ctx v (λ (x*)
+                    (for ([x x*]
+                          [t typ0*])
+                      (: x (lookup/type new-ctx t)))
+                    (cons (cons v x*) 'Type)))
+      (for ([c c0*]
+            [typ typ0*])
+        (bind new-ctx c (cons (cons (make-parameter c) '()) (lookup/type ctx typ)))))
     (for ([c c1*]
           [typ typ1*])
       (constructor c typ v ctx))
     #f]
-   [(ind ,v (,c* ,typ*) ...)
+   [(ind ,v ; name
+         ; constructor*
+         (,c* ,typ*) ...)
     (bind ctx v (cons (cons v '()) 'Type))
     (for ([c c*]
           [typ typ*])
@@ -74,10 +86,12 @@
    [(,[e0] ,[e1] ...)
     (e0 e1)]
    [,v (lookup ctx v)]))
+(require racket/trace)
+(trace eval)
 
 (define-syntax-rule (module-begin EXPR ...)
   (#%module-begin
-   (define ctx (context (make-immutable-hash)))
+   (define ctx (context/new))
    (bind ctx 'Type 'Type)
    (define all-form (list (eval `EXPR ctx) ...))
    (for-each (λ (form)
@@ -88,7 +102,7 @@
 
 (define-syntax-rule (top-interaction . exp)
   (begin
-    (define ctx (context (make-immutable-hash)))
+    (define ctx (context/new))
     (bind ctx 'Type 'Type)
     (eval `exp ctx)))
 
