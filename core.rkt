@@ -71,8 +71,6 @@
     [(pair? t)
      (if (empty? (rest (car t)))
          (pretty-proc (caar t))
-         (let ([t2 (cadar t)])
-           ;;; TODO: unify t2 with memorized type
-           `(,(pretty-proc (caar t)) ,(pretty-proc t2))))]
+         `(,(pretty-proc (caar t)) ,(pretty-proc (cadar t))))]
     [(list? t) (map pretty-proc t)]
     [else t]))
