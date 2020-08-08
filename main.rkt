@@ -30,12 +30,6 @@
 (define (lookup/type ctx typ)
   (nanopass-case
    (Inductive Type) typ
-   [(-> ,typ* ... ,typ)
-    (λ (x*)
-      (for ([x x*]
-            [t typ*])
-        (: x (lookup ctx t)))
-      (lookup ctx typ))]
    [(,typ ,typ* ...)
     ((lookup ctx typ)
      (map (λ (t) (lookup ctx t)) typ*))]
