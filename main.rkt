@@ -1,104 +1,128 @@
 #lang racket
 
-(provide (except-out (all-from-out racket) #%module-begin #%top-interaction)
-         (rename-out [module-begin #%module-begin]
-                     [top-interaction #%top-interaction]))
+;;; FIXME: add syntax wrapper to fix example
+(module+ test
+  (require rackunit))
 
-(require (for-syntax syntax/parse)
-         racket/syntax
-         syntax/stx)
-(require nanopass)
-(require "lang.rkt"
-         "core.rkt")
+; helper
+(define (pretty t)
+  (match (?/get t)
+    [`(,a* ...) (map pretty a*)]
+    [`(,tm . ,ty) `(,(pretty tm) . ,(pretty ty))]
+    [t t]))
+(define (?/get p?) (if (parameter? p?) (p?) p?))
 
-(struct context (parent map)
-  #:mutable
-  #:transparent)
-(define (context/new #:parent [parent #f])
-  (context parent (make-immutable-hash)))
-(define (bind ctx v x)
-  (unless (not (hash-ref (context-map ctx) v (λ () #f)))
-    (error (format "redefined: ~a" v)))
-  (set-context-map! ctx
-                    (hash-set (context-map ctx) v x)))
-(define (lookup ctx v)
-  (let ([r (hash-ref (context-map ctx) v
-                     (λ () (if (context-parent ctx)
-                               (lookup (context-parent ctx) v)
-                               (raise (format "no variable named: ~a" v)))))])
+; U is greatest type level
+(define U 'U)
+(define (? ty) (make-parameter `(,(gensym '?) . ,ty)))
+(define (occurs v t)
+  (match t
+    [`(,t* ...)
+     (ormap (λ (t) (occurs v t)) t*)]
+    (t (equal? v t))))
+(define (unify t1 t2)
+  (match* (t1 t2)
+    [(_ (? parameter?))
+     (unless (or (eqv? t1 (?/get t2)) (not (occurs (?/get t2) t1)))
+       (error (format "~a occurs in ~a" (?/get t2) (?/get t1))))
+     (t2 (?/get t1))]
+    ; swap
+    [((? parameter?) _) (unify t2 t1)]
+    [(`(,tm1 . ,ty1) `(,tm2 . ,ty2))
+     (unify ty1 ty2)
+     (unify tm1 tm2)]
+    ; not free variable, then we expect they are same type
+    [(_ _) (ty= t1 t2)]))
+(define (: term type)
+  (unless (ty= (cdr (?/get term)) type)
+    (error (format "~a is a ~a, not a ~a"
+                   (pretty term)
+                   (pretty (cdr (?/get term)))
+                   (pretty type)))))
+(define (<- t)
+  (match t
+    ['U U]
+    [`(,term . ,type) type]
+    [t (cdr (?/get t))]))
+(define (ty= t1 t2)
+  (unless (equal? (pretty t1) (pretty t2))
+    (error (format "~a != ~a" (pretty t1) (pretty t2)))))
+
+(define Bool '(Bool . U))
+(define (true) `(true . ,Bool))
+(define (false) `(false . ,Bool))
+
+(define Nat '(Nat . U))
+(define (z) `(z . ,Nat))
+(define (s n)
+  (: n Nat)
+  `((s ,n) . ,Nat))
+
+(define (plus m n)
+  (: m Nat)
+  (: n Nat)
+  (match (car m)
+    ['z n]
+    [`(s ,m-)
+     (s (plus m- n))]))
+
+(define (List A)
+  (: A U)
+  `((List ,A) . U))
+(define (nil) `(nil . ,(List (? U))))
+(define (:: #:A [A (? U)] a lst)
+  (unify A (<- a))
+  (: (?/get A) U)
+  (unify (List (?/get A)) (<- lst))
+  `((:: ,a ,lst) . ,(pretty (List A))))
+
+(define (Vec LEN E)
+  (: LEN Nat)
+  (: E U)
+  `((Vec ,LEN ,E) . U))
+(define (vecnil) `(vecnil . ,(Vec (z) (? U))))
+(define (vec:: #:E [E (? U)] #:LEN [LEN (? Nat)] e v)
+  (unify E (<- e))
+  (: (?/get E) U)
+  (unify (Vec LEN (?/get E)) (<- v))
+  `((vec:: ,e ,v) . ,(Vec (s LEN) E)))
+
+(define (vec/length v)
+  (define LEN (? Nat))
+  (define E (? U))
+  (unify (Vec LEN E) (<- v))
+  (?/get LEN))
+
+(define (≡ #:A [A (? U)] a b)
+  (unify (<- a) A)
+  `((≡ ,A ,a ,b) . U))
+(define (refl #:A [A (? U)] #:a [a (? A)])
+  `(refl . ,(≡ a a)))
+
+(define (sym #:A [A (? U)] #:x [x (? A)] #:y [y (? A)]
+             [P1 (? (≡ x y))])
+  (unify (refl) P1)
+  (let ([r (refl)])
+    (unify r (? (≡ y x)))
     r))
-(define (lookup/type ctx typ)
-  (nanopass-case
-   (Inductive Type) typ
-   [(,typ ,typ* ...)
-    ((lookup ctx typ)
-     (map (λ (t) (lookup ctx t)) typ*))]
-   [else (lookup ctx typ)]))
+(pretty (sym))
 
-(define (constructor c typ v ctx [new-ctx ctx])
-  (bind ctx
-        c
-        (nanopass-case
-         (Inductive Type) typ
-         [(-> ,typ* ... ,typ)
-          (λ (x*)
-            (for ([x x*]
-                  [t typ*])
-              (: x (lookup/type new-ctx t)))
-            (cons (cons c x*) (lookup/type new-ctx v)))]
-         [else (cons (cons c '()) (lookup/type new-ctx v))])))
+(module+ test
+  (check-equal? (s (s (z))) '((s ((s (z Nat . U)) Nat . U)) Nat . U))
+  (check-equal? (List Nat) '((List (Nat . U)) . U))
+  (check-equal? (pretty (:: (s (z)) (:: (z) (nil))))
+                '((::
+                   ((s (z Nat . U)) Nat . U)
+                   ((:: (z Nat . U) (nil (List (Nat . U)) . U)) (List (Nat . U)) . U))
+                  (List (Nat . U)) . U))
+  (check-equal? (pretty (vec:: (z) (vecnil)))
+                '((vec::
+                   (z Nat . U)
+                   (vecnil (Vec (z Nat . U) (Nat . U)) . U))
+                  (Vec ((s (z Nat . U)) Nat . U) (Nat . U)) . U))
 
-(define (eval e ctx)
-  (nanopass-case
-   (Inductive Expr) (ind-parser e)
-   [(ind
-     ; (name [dependent-type*])
-     (,v [,c0* ,typ0*] ...)
-     ; constructor*
-     (,c1* ,typ1*) ...)
-    (let ([new-ctx (context/new #:parent ctx)])
-      (bind ctx v (λ (x*)
-                    (for ([x x*]
-                          [c c0*]
-                          [t typ0*])
-                      (: x (lookup/type new-ctx t))
-                      (unify (lookup new-ctx c) x))
-                    (cons (cons v x*) 'Type)))
-      (for ([c c0*]
-            [typ typ0*])
-        (bind new-ctx c (cons (cons (make-parameter c) '()) (lookup/type new-ctx typ))))
-      (for ([c c1*]
-            [typ typ1*])
-        (constructor c typ v ctx new-ctx)))
-    #f]
-   [(ind ,v ; name
-         ; constructor*
-         (,c* ,typ*) ...)
-    (bind ctx v (cons (cons v '()) 'Type))
-    (for ([c c*]
-          [typ typ*])
-      (constructor c typ v ctx))
-    #f]
-   [(,[e0] ,[e1] ...)
-    (e0 e1)]
-   [,v (lookup ctx v)]))
+  (check-equal? (pretty (plus (s (z)) (s (z))))
+                '((s ((s (z Nat . U)) Nat . U)) Nat . U))
 
-(define-syntax-rule (module-begin EXPR ...)
-  (#%module-begin
-   (define ctx (context/new))
-   (bind ctx 'Type 'Type)
-   (define all-form (list (eval `EXPR ctx) ...))
-   (for-each (λ (form)
-               (if form
-                   (displayln (pretty form))
-                   (void)))
-             all-form)))
-
-(define-syntax-rule (top-interaction . exp)
-  (begin
-    (define ctx (context/new))
-    (bind ctx 'Type 'Type)
-    (eval `exp ctx)))
-
-(module reader syntax/module-reader
-  inductive)
+  (check-equal? (pretty (vec/length (vec:: (z) (vec:: (z) (vecnil)))))
+                '((s ((s (z Nat . U)) Nat . U)) Nat . U)))
