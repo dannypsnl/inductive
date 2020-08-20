@@ -98,6 +98,14 @@
 (define (refl #:A [A (? U)] #:a [a (? A)])
   `(refl . ,(≡ a a)))
 
+(define (sym #:A [A (? U)] #:x [x (? A)] #:y [y (? A)]
+             [P1 (? (≡ x y))])
+  (unify (refl) P1)
+  (let ([r (refl)])
+    (unify r (? (≡ y x)))
+    r))
+(pretty (sym))
+
 (module+ test
   (check-equal? (s (s (z))) '((s ((s (z Nat . U)) Nat . U)) Nat . U))
   (check-equal? (List Nat) '((List (Nat . U)) . U))
