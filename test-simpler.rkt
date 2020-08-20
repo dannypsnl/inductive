@@ -13,7 +13,7 @@
 
 ; U is greatest type level
 (define U 'U)
-(define (?/new ty) (make-parameter `(,(gensym '?) . ,ty)))
+(define (? ty) (make-parameter `(,(gensym '?) . ,ty)))
 (define (occurs v t)
   (match t
     [`(,t* ...)
@@ -41,7 +41,8 @@
 (define (<- t)
   (match t
     ['U U]
-    [`(,term . ,type) type]))
+    [`(,term . ,type) type]
+    [t (cdr (?/get t))]))
 (define (ty= t1 t2)
   (unless (equal? (pretty t1) (pretty t2))
     (error (format "~a != ~a" (pretty t1) (pretty t2)))))
@@ -67,8 +68,8 @@
 (define (List A)
   (: A U)
   `((List ,A) . U))
-(define (nil) `(nil . ,(List (?/new U))))
-(define (:: #:A [A (?/new U)] a lst)
+(define (nil) `(nil . ,(List (? U))))
+(define (:: #:A [A (? U)] a lst)
   (unify A (<- a))
   (: (?/get A) U)
   (unify (List (?/get A)) (<- lst))
@@ -78,18 +79,24 @@
   (: LEN Nat)
   (: E U)
   `((Vec ,LEN ,E) . U))
-(define (vecnil) `(vecnil . ,(Vec (z) (?/new U))))
-(define (vec:: #:E [E (?/new U)] #:LEN [LEN (?/new Nat)] e v)
+(define (vecnil) `(vecnil . ,(Vec (z) (? U))))
+(define (vec:: #:E [E (? U)] #:LEN [LEN (? Nat)] e v)
   (unify E (<- e))
   (: (?/get E) U)
   (unify (Vec LEN (?/get E)) (<- v))
   `((vec:: ,e ,v) . ,(Vec (s LEN) E)))
 
 (define (vec/length v)
-  (define LEN (?/new Nat))
-  (define E (?/new U))
+  (define LEN (? Nat))
+  (define E (? U))
   (unify (Vec LEN E) (<- v))
   (?/get LEN))
+
+(define (≡ #:A [A (? U)] a b)
+  (unify (<- a) A)
+  `((≡ ,A ,a ,b) . U))
+(define (refl #:A [A (? U)] #:a [a (? A)])
+  `(refl . ,(≡ a a)))
 
 (module+ test
   (check-equal? (s (s (z))) '((s ((s (z Nat . U)) Nat . U)) Nat . U))
