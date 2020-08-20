@@ -85,6 +85,12 @@
   (unify (Vec LEN (parameter/get E)) (<- v))
   `((vec:: ,e ,v) . ,(Vec (s LEN) E)))
 
+(define (vec/length v)
+  (define LEN (? Nat))
+  (define E (? U))
+  (unify (Vec LEN E) (<- v))
+  (parameter/get LEN))
+
 (module+ test
   (check-equal? (s (s (z))) '((s ((s (z Nat . U)) Nat . U)) Nat . U))
   (check-equal? (List Nat) '((List (Nat . U)) . U))
@@ -100,4 +106,7 @@
                   (Vec ((s (z Nat . U)) Nat . U) (Nat . U)) . U))
 
   (check-equal? (pretty (plus (s (z)) (s (z))))
+                '((s ((s (z Nat . U)) Nat . U)) Nat . U))
+
+  (check-equal? (pretty (vec/length (vec:: (z) (vec:: (z) (vecnil)))))
                 '((s ((s (z Nat . U)) Nat . U)) Nat . U)))
