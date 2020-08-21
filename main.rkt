@@ -94,7 +94,9 @@
   (?/get LEN))
 
 (define (≡ #:A [A (? U)] a b)
+  (: A U)
   (unify (<- a) A)
+  (: b A)
   `((≡ ,A ,a ,b) . U))
 (define (refl #:A [A (? U)] #:a [a (? A)])
   `(refl . ,(≡ a a)))
