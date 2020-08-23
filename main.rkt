@@ -5,6 +5,7 @@ FIXME: add syntax wrapper to fix example
 NOTE
 * pretty every top level application
 * ind provide new inductive data type
+* provide match syntax wrapper
 * define-for-syntax?
 |#
 (module+ test
