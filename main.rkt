@@ -1,6 +1,12 @@
 #lang racket
 
-;;; FIXME: add syntax wrapper to fix example
+#|
+FIXME: add syntax wrapper to fix example
+NOTE
+* pretty every top level application
+* ind provide new inductive data type
+* define-for-syntax?
+|#
 (module+ test
   (require rackunit))
 
@@ -22,10 +28,9 @@
 (define (nil) (tt 'nil (List (? U))))
 (define (:: #:A [A (? U)] a lst)
   (unify A (<- a))
-  (: (?/get A) U)
-  (unify (List (?/get A)) (<- lst))
-  ; NOTE: we can use pretty is because A should be determined
-  (tt `(:: ,a ,lst) (pretty (List A))))
+  (: A U)
+  (unify (List A) (<- lst))
+  (tt `(:: ,a ,lst) (List A)))
 
 (define (Vec LEN E)
   (: LEN Nat)
@@ -34,15 +39,9 @@
 (define (vecnil) (tt 'vecnil (Vec (z) (? U))))
 (define (vec:: #:E [E (? U)] #:LEN [LEN (? Nat)] e v)
   (unify E (<- e))
-  (: (?/get E) U)
-  (unify (Vec LEN (?/get E)) (<- v))
-  (tt `(vec:: ,e ,v) (Vec (s LEN) E)))
-
-(define (vec/length v)
-  (define LEN (? Nat))
-  (define E (? U))
+  (: E U)
   (unify (Vec LEN E) (<- v))
-  (?/get LEN))
+  (tt `(vec:: ,e ,v) (Vec (s LEN) E)))
 
 (define (≡ #:A [A (? U)] a b)
   (: A U)
@@ -70,6 +69,11 @@
                   (vec:: (: z (: Nat U)) (: vecnil (: (Vec (: z (: Nat U)) (: Nat U)) U)))
                   (: (Vec (: (s (: z (: Nat U))) (: Nat U)) (: Nat U)) U)))
 
+  (define (vec/length v)
+    (define LEN (? Nat))
+    (define E (? U))
+    (unify (Vec LEN E) (<- v))
+    LEN)
   (check-equal? (pretty (vec/length (vec:: (z) (vec:: (z) (vecnil)))))
                 '(: (s (: (s (: z (: Nat U))) (: Nat U))) (: Nat U)))
 
@@ -88,7 +92,6 @@
       ['z n]
       [`(s ,m-)
        (s (plus m- n))]))
-
   (check-equal? (pretty (plus (s (z)) (s (z))))
                 '(: (s (: (s (: z (: Nat U))) (: Nat U))) (: Nat U)))
 
