@@ -28,6 +28,9 @@ NOTE
     ; or
     ; [nil (List (? U))]
     ; [cons [#:A (? U)] [a A] [l (List A)] (List A)]
+    (pattern (c:id typ)
+             #:attr def
+             #'(define (c) (tt 'c typ)))
     (pattern (c:id [p*:id ptyp*:typ] ... typ)
              #:attr def
              #'(define (c p* ...)
