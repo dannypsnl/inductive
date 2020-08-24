@@ -1,10 +1,7 @@
 #lang inductive
 
+(provide Nat z s)
+
 (ind Nat
      [z Nat]
-     [s (-> Nat Nat)])
-
-Nat
-z
-(s z)
-(s (s z))
+     [s (n Nat) Nat])

@@ -1,13 +1,7 @@
 #lang inductive
 
-(ind Nat
-     [z Nat]
-     [s (-> Nat Nat)])
-(ind (List [a Type])
-     [nil (List a)]
-     [:: (-> a (List a) (List a))])
+(require "nat.rkt")
 
-List
-nil
-(:: z nil)
-(:: (s (s z)) nil)
+(ind (List [A U])
+     [nil (List (? U))]
+     [:: [A (? U)] [a A] [l (List A)] (List A)])
