@@ -47,7 +47,7 @@
     [`((~literal provide) id* ...) #'(provide id* ...)]
     [`((~literal require) id* ...) #'(require id* ...)]
     [`(f arg* ...)
-     #'(pretty (f arg* ...))]
+     #'(displayln (pretty (f arg* ...)))]
     [`x:id #'x]))
 
 (define-syntax-rule (module-begin e* ...)
