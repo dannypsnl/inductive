@@ -41,7 +41,7 @@
     ; not free variable, then we expect they are the same
     [(_ _) (ty= t1 t2)]))
 (define (: term type)
-  (unless (ty= (tt-ty (?/get term)) type)
+  (unless (ty= (<- (?/get term)) type)
     (error (format "~a is a ~a, not a ~a"
                    (pretty term)
                    (pretty (tt-ty (?/get term)))

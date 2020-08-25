@@ -68,15 +68,10 @@
         [z Nat]
         [s (n Nat) Nat]))
 
-  (define (List A)
-    (: A U)
-    (tt `(List ,A) U))
-  (define (nil) (tt 'nil (List (? U))))
-  (define (:: #:A [A (? U)] a lst)
-    (unify A (<- a))
-    (: A U)
-    (unify (List A) (<- lst))
-    (tt `(:: ,a ,lst) (List A)))
+  (top-interaction
+   (ind (List [A U])
+        [nil (List (? U))]
+        [:: #:A (A U) [a A] [lst (List A)] (List A)]))
 
   (define (Vec LEN E)
     (: LEN Nat)
@@ -85,7 +80,6 @@
   (define (vecnil) (tt 'vecnil (Vec (z) (? U))))
   (define (vec:: #:E [E (? U)] #:LEN [LEN (? Nat)] e v)
     (unify E (<- e))
-    (: E U)
     (unify (Vec LEN E) (<- v))
     (tt `(vec:: ,e ,v) (Vec (s LEN) E)))
 
