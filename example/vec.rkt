@@ -2,9 +2,11 @@
 
 (require "prelude.rkt")
 
-(ind (Vec [a Type] [len Nat])
-     [vecnil (Vec a z)]
-     [vec:: (->* ([n Nat]) a (Vec a n) (Vec a (s n)))])
+(ind (Vec [A U] [LEN Nat])
+     [vecnil (Vec (? U) z)]
+     [vec:: #:LEN [LEN Nat]
+            [a A] [v (Vec A LEN)]
+            (Vec A (s LEN))])
 
-vecnil
-(vec:: z vecnil)
+(vecnil)
+(vec:: (z) (vecnil))
