@@ -2,7 +2,8 @@
 
 (provide Bool true false
          Nat z s
-         List nil ::)
+         List nil ::
+         Vec vecnil vec::)
 
 (ind Bool
      [true Bool]
@@ -15,3 +16,9 @@
 (ind (List [A U])
      [nil (List (? U))]
      [:: #:A [A U] [a A] [l (List A)] (List A)])
+
+(ind (Vec [A U] [LEN Nat])
+     [vecnil (Vec (? U) z)]
+     [vec:: #:LEN [LEN Nat] #:A [A U]
+            [a A] [v (Vec A LEN)]
+            (Vec A (s LEN))])
