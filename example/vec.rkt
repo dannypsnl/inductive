@@ -1,6 +1,6 @@
 #lang inductive
 
-(require "nat.rkt")
+(require "prelude.rkt")
 
 (ind (Vec [a Type] [len Nat])
      [vecnil (Vec a z)]

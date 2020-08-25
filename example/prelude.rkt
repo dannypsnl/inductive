@@ -1,6 +1,8 @@
 #lang inductive
 
-(provide Nat z s)
+(ind Bool
+     [true Bool]
+     [false Bool])
 
 (ind Nat
      [z Nat]

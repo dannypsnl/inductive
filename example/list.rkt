@@ -1,5 +1,9 @@
 #lang inductive
 
+(require "prelude.rkt")
+
 (ind (List [A U])
      [nil (List (? U))]
-     [:: [A (? U)] [a A] [l (List A)] (List A)])
+     [:: #:A [A U] [a A] [l (List A)] (List A)])
+
+(nil)
