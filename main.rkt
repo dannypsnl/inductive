@@ -24,35 +24,54 @@
              #:attr def
              #'(define (c) (tt 'c typ)))
     (pattern (c:id (~or [~seq k*:keyword [ki*:id ktyp*:typ]]
-                        [p*:id ptyp*:typ])
+                        [p*:id p/ty*:typ])
                    ...
                    typ)
              #:attr def
              #`(define (c {~@ k* [ki* (? ktyp*)]} ...
                           p* ...)
                  (unify (<- ki*) ktyp*) ...
-                 (unify ptyp* (<- p*)) ...
+                 (unify p/ty* (<- p*)) ...
                  (tt (list 'c p* ...) typ))))
   (syntax-parse stx
+    ; Inductive data type
+    ; example
+    ; (ind Nat
+    ;      [z Nat]
+    ;      [s (n Nat) Nat])
     [`((~literal ind) name:id c*:constructor ...)
      #'(begin
          (define name (tt 'name U))
          c*.def ...)]
     [`((~literal ind) (name:id
                        (~or [~seq k*:keyword [ki*:id ktyp*:typ]]
-                            [tp*:id tptyp*:typ])
+                            [tp*:id tp/ty*:typ])
                        ...) c*:constructor ...)
      #'(begin
          (define (name {~@ k* [ki* (? ktyp*)]} ...
                        tp* ...)
            (unify (<- ki*) ktyp*) ...
-           (unify tptyp* (<- tp*)) ...
+           (unify tp/ty* (<- tp*)) ...
            (tt (list 'name tp* ...) U))
          c*.def ...)]
     [`((~literal ind) . _)
      (error 'ind "bad form ~a" stx)]
+    ;; define function
+    [`((~literal define) (name:id
+                          (~or [~seq k*:keyword [ki*:id ktyp*:typ]]
+                               [p*:id p/ty*:typ])
+                          ...)
+                         body* ...)
+     #'(define (name {~@ k* [ki* (? ktyp*)]} ...
+                     p* ...)
+         (unify (<- ki*) ktyp*) ...
+         (unify p/ty* (<- p*)) ...
+         body* ...)]
+    ;; provide
     [`((~literal provide) . any) #'(provide . any)]
+    ;; require
     [`((~literal require) . any) #'(require . any)]
+    ;; top #%app
     [`(f arg* ...)
      #'(displayln (pretty (f arg* ...)))]
     [`x:id #'x]))
@@ -86,20 +105,6 @@
         [vec:: #:LEN [LEN Nat] #:A [A U]
                [a A] [v (Vec LEN A)]
                (Vec (s LEN) A)]))
-
-  (define (≡ #:A [A (? U)] a b)
-    (: A U)
-    (unify (<- a) A)
-    (: b A)
-    (tt `(≡ ,A ,a ,b) U))
-  (define (refl #:A [A (? U)] #:a [a (? A)])
-    (tt 'refl (≡ a a)))
-
-  #;(define (vec/length v)
-      (define LEN (? Nat))
-      (define E (? U))
-      (unify (Vec LEN E) (<- v))
-      LEN)
 
   #;(define (sym #:A [A (? U)] #:x [x (? A)] #:y [y (? A)]
                  [P1 (? (≡ x y))])
