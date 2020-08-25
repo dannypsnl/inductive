@@ -17,8 +17,11 @@
      [nil (List (? U))]
      [:: #:A [A U] [a A] [l (List A)] (List A)])
 
-(ind (Vec [A U] [LEN Nat])
-     [vecnil (Vec (? U) z)]
+(ind (Vec [LEN Nat] [A U])
+     [vecnil (Vec (z) (? U))]
      [vec:: #:LEN [LEN Nat] #:A [A U]
-            [a A] [v (Vec A LEN)]
-            (Vec A (s LEN))])
+            [a A] [v (Vec LEN A)]
+            (Vec (s LEN) A)])
+
+(vecnil)
+(vec:: (z) (vecnil))

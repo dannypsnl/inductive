@@ -13,7 +13,7 @@
 (define-syntax (top-interaction stx)
   (define-syntax-class typ
     (pattern t:id)
-    (pattern (t:id tp*:typ)))
+    (pattern (t:id tp*:typ ...)))
   (define-syntax-class constructor
     ; [z Nat]
     ; [s (n Nat) Nat]
@@ -24,9 +24,11 @@
              #:attr def
              #'(define (c) (tt 'c typ)))
     (pattern (c:id (~or [~seq k*:keyword [ki*:id ktyp*:typ]]
-                        [p*:id ptyp*:typ]) ... typ)
+                        [p*:id ptyp*:typ])
+                   ...
+                   typ)
              #:attr def
-             #`(define (c k* ... [ki* (? ktyp*)] ...
+             #`(define (c {~@ k* [ki* (? ktyp*)]} ...
                           p* ...)
                  (unify (<- ki*) ktyp*) ...
                  (unify ptyp* (<- p*)) ...
@@ -39,13 +41,13 @@
     [`((~literal ind) (name:id [tp*:id tptyp*:typ] ...) c*:constructor ...)
      #'(begin
          (define (name tp* ...)
-           (: tp* 'tptyp*) ...
+           (: tp* tptyp*) ...
            (tt (list 'name tp* ...) U))
          c*.def ...)]
     [`((~literal ind) . _)
      (error 'ind "bad form ~a" stx)]
-    [`((~literal provide) id* ...) #'(provide id* ...)]
-    [`((~literal require) id* ...) #'(require id* ...)]
+    [`((~literal provide) . any) #'(provide . any)]
+    [`((~literal require) . any) #'(require . any)]
     [`(f arg* ...)
      #'(displayln (pretty (f arg* ...)))]
     [`x:id #'x]))
@@ -73,15 +75,12 @@
         [nil (List (? U))]
         [:: #:A (A U) [a A] [lst (List A)] (List A)]))
 
-  (define (Vec LEN E)
-    (: LEN Nat)
-    (: E U)
-    (tt `(Vec ,LEN ,E) U))
-  (define (vecnil) (tt 'vecnil (Vec (z) (? U))))
-  (define (vec:: #:E [E (? U)] #:LEN [LEN (? Nat)] e v)
-    (unify E (<- e))
-    (unify (Vec LEN E) (<- v))
-    (tt `(vec:: ,e ,v) (Vec (s LEN) E)))
+  (top-interaction
+   (ind (Vec [LEN Nat] [A U])
+        [vecnil (Vec (z) (? U))]
+        [vec:: #:LEN [LEN Nat] #:A [A U]
+               [a A] [v (Vec LEN A)]
+               (Vec (s LEN) A)]))
 
   (define (≡ #:A [A (? U)] a b)
     (: A U)
@@ -91,28 +90,11 @@
   (define (refl #:A [A (? U)] #:a [a (? A)])
     (tt 'refl (≡ a a)))
 
-  (check-equal? (pretty (List Nat))
-                '(: (List (: Nat U)) U))
-  (check-equal? (pretty (:: (s (z)) (:: (z) (nil))))
-                '(:
-                  (::
-                   (: (s (: z (: Nat U))) (: Nat U))
-                   (:
-                    (:: (: z (: Nat U)) (: nil (: (List (: Nat U)) U)))
-                    (: (List (: Nat U)) U)))
-                  (: (List (: Nat U)) U)))
-  (check-equal? (pretty (vec:: (z) (vecnil)))
-                '(:
-                  (vec:: (: z (: Nat U)) (: vecnil (: (Vec (: z (: Nat U)) (: Nat U)) U)))
-                  (: (Vec (: (s (: z (: Nat U))) (: Nat U)) (: Nat U)) U)))
-
-  (define (vec/length v)
-    (define LEN (? Nat))
-    (define E (? U))
-    (unify (Vec LEN E) (<- v))
-    LEN)
-  (check-equal? (pretty (vec/length (vec:: (z) (vec:: (z) (vecnil)))))
-                '(: (s (: (s (: z (: Nat U))) (: Nat U))) (: Nat U)))
+  #;(define (vec/length v)
+      (define LEN (? Nat))
+      (define E (? U))
+      (unify (Vec LEN E) (<- v))
+      LEN)
 
   #;(define (sym #:A [A (? U)] #:x [x (? A)] #:y [y (? A)]
                  [P1 (? (≡ x y))])
@@ -122,15 +104,13 @@
         r))
   #;(pretty (sym))
 
-  (define (Nat/+ m n)
-    (: m Nat)
-    (: n Nat)
-    (match (tt-tm (?/get m))
-      ['z n]
-      [`(s ,m-)
-       (s (Nat/+ m- n))]))
-  (check-equal? (pretty (Nat/+ (s (z)) (s (z))))
-                '(: (s (: (s (: z (: Nat U))) (: Nat U))) (: Nat U)))
+  #;(define (Nat/+ m n)
+      (: m Nat)
+      (: n Nat)
+      (match (tt-tm (?/get m))
+        ['z n]
+        [`(s ,m-)
+         (s (Nat/+ m- n))]))
 
   #;(define (+0/Nat #:x [x (? Nat)])
       (let ([r (refl)])
