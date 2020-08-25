@@ -1,5 +1,8 @@
 #lang inductive
 
+(provide Bool true false
+         Nat z s)
+
 (ind Bool
      [true Bool]
      [false Bool])

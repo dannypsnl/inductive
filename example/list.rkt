@@ -7,3 +7,4 @@
      [:: #:A [A U] [a A] [l (List A)] (List A)])
 
 (nil)
+(:: (z) (nil))

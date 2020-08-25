@@ -2,7 +2,8 @@
 
 (provide (except-out (all-from-out racket) #%module-begin #%top-interaction)
          (rename-out [module-begin #%module-begin]
-                     [top-interaction #%top-interaction]))
+                     [top-interaction #%top-interaction])
+         ? U)
 
 (module+ test
   (require rackunit))
@@ -18,14 +19,17 @@
     ; [s (n Nat) Nat]
     ; or
     ; [nil (List (? U))]
-    ; [cons [#:A (? U)] [a A] [l (List A)] (List A)]
+    ; [cons #:A [A U] [a A] [l (List A)] (List A)]
     (pattern (c:id typ)
              #:attr def
              #'(define (c) (tt 'c typ)))
-    (pattern (c:id [p*:id ptyp*:typ] ... typ)
+    (pattern (c:id (~or [~seq k*:keyword [ki*:id ktyp*:typ]]
+                        [p*:id ptyp*:typ]) ... typ)
              #:attr def
-             #'(define (c p* ...)
-                 (: p* ptyp*) ...
+             #`(define (c k* ... [ki* (? ktyp*)] ...
+                          p* ...)
+                 (unify (<- p*) ptyp*) ...
+                 ;(: p* ptyp*) ...
                  (tt (list 'c p* ...) typ))))
   (syntax-parse stx
     [`((~literal ind) name:id c*:constructor ...)
@@ -38,8 +42,8 @@
            (: tp* 'tptyp*) ...
            (tt (list 'name tp* ...) U))
          c*.def ...)]
-    [`((~literal ind) . bad)
-     (error 'ind "bad form ~a" #'(ind bad))]
+    [`((~literal ind) . _)
+     (error 'ind "bad form ~a" stx)]
     [`((~literal provide) id* ...) #'(provide id* ...)]
     [`((~literal require) id* ...) #'(require id* ...)]
     [`(f arg* ...)
