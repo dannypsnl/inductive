@@ -38,10 +38,15 @@
      #'(begin
          (define name (tt 'name U))
          c*.def ...)]
-    [`((~literal ind) (name:id [tp*:id tptyp*:typ] ...) c*:constructor ...)
+    [`((~literal ind) (name:id
+                       (~or [~seq k*:keyword [ki*:id ktyp*:typ]]
+                            [tp*:id tptyp*:typ])
+                       ...) c*:constructor ...)
      #'(begin
-         (define (name tp* ...)
-           (: tp* tptyp*) ...
+         (define (name {~@ k* [ki* (? ktyp*)]} ...
+                       tp* ...)
+           (unify (<- ki*) ktyp*) ...
+           (unify tptyp* (<- tp*)) ...
            (tt (list 'name tp* ...) U))
          c*.def ...)]
     [`((~literal ind) . _)

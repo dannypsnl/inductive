@@ -23,5 +23,5 @@
             [a A] [v (Vec LEN A)]
             (Vec (s LEN) A)])
 
-(vecnil)
-(vec:: (z) (vecnil))
+(ind (≡ #:A [A U] [a A] [b A])
+     [refl #:A [A U] #:a [a A] (≡ a a)])
