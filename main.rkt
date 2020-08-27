@@ -73,7 +73,7 @@
     [`((~literal require) . any) #'(require . any)]
     ;; top #%app
     [`(f arg* ...)
-     #'(displayln (pretty (f arg* ...)))]
+     #'(displayln (f arg* ...))]
     [`x:id #'x]))
 
 (define-syntax-rule (module-begin e* ...)

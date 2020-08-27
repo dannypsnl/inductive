@@ -16,7 +16,11 @@
     [t t]))
 (define (?/get p?) (if (parameter? p?) (p?) p?))
 ;;; core
-(struct tt (tm ty) #:transparent)
+(struct tt (tm ty)
+  #:methods gen:custom-write
+  [(define (write-proc tt port mode)
+     (fprintf port "~a" (pretty tt)))]
+  #:transparent)
 ; U is greatest type level
 (define U 'U)
 (define (? ty) (make-parameter (tt (gensym '?) ty)))
