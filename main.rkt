@@ -5,8 +5,6 @@
                      [top-interaction #%top-interaction])
          ? U)
 
-(module+ test
-  (require rackunit))
 (require (for-syntax syntax/parse))
 (require "core.rkt")
 
@@ -82,48 +80,3 @@
 
 (module reader syntax/module-reader
   inductive)
-
-(module+ test
-  (top-interaction
-   (ind Bool
-        [true Bool]
-        [false Bool]))
-
-  (top-interaction
-   (ind Nat
-        [z Nat]
-        [s (n Nat) Nat]))
-
-  (top-interaction
-   (ind (List [A U])
-        [nil (List (? U))]
-        [:: #:A (A U) [a A] [lst (List A)] (List A)]))
-
-  (top-interaction
-   (ind (Vec [LEN Nat] [A U])
-        [vecnil (Vec (z) (? U))]
-        [vec:: #:LEN [LEN Nat] #:A [A U]
-               [a A] [v (Vec LEN A)]
-               (Vec (s LEN) A)]))
-
-  #;(define (sym #:A [A (? U)] #:x [x (? A)] #:y [y (? A)]
-                 [P1 (? (≡ x y))])
-      (unify (refl) P1)
-      (let ([r (refl)])
-        (unify (≡ y x) (<- r))
-        r))
-  #;(sym)
-
-  #;(define (Nat/+ m n)
-      (: m Nat)
-      (: n Nat)
-      (match (tt-tm (?/get m))
-        ['z n]
-        [`(s ,m-)
-         (s (Nat/+ m- n))]))
-
-  #;(define (+0/Nat #:x [x (? Nat)])
-      (let ([r (refl)])
-        (unify (≡ (Nat/+ (z) x) x) (<- r))
-        r))
-  #;(+0/Nat))
