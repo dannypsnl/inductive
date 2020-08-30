@@ -2,11 +2,10 @@
 
 (provide (struct-out tt)
          U
-         ?
+         ? ?/get
          unify
          :
-         <-
-         pretty ?/get)
+         <-)
 
 ;;; helper
 (define (pretty t)

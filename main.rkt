@@ -112,7 +112,7 @@
       (let ([r (refl)])
         (unify (≡ y x) (<- r))
         r))
-  #;(pretty (sym))
+  #;(sym)
 
   #;(define (Nat/+ m n)
       (: m Nat)
@@ -126,4 +126,4 @@
       (let ([r (refl)])
         (unify (≡ (Nat/+ (z) x) x) (<- r))
         r))
-  #;(pretty (+0/Nat)))
+  #;(+0/Nat))
