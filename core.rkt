@@ -114,15 +114,16 @@
       r))
   (sym)
 
-  (define (plus m n)
+  (define (Nat/+ m n)
     (: m Nat)
     (: n Nat)
     (match (tt-tm (?/get m))
       ['z n]
       [`(s ,m-)
-       (s (plus m- n))]))
-  (define (+0/Nat #:x [x (? Nat)])
+       (s (Nat/+ m- n))]))
+
+  (define (n+0/Nat #:n [n (? Nat)])
     (let ([r (refl)])
-      (unify (≡ (plus (z) x) x) (<- r))
+      (unify (≡ (Nat/+ (z) n) n) (<- r))
       r))
-  (+0/Nat))
+  (n+0/Nat))
