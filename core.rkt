@@ -26,19 +26,21 @@
 ; U is greatest type level
 (define U 'U)
 (define (? ty) (make-parameter (tt (gensym '?) ty)))
-(define (occurs v t)
+(define (occurs X t)
   (match t
     [`(,t* ...)
-     (ormap (λ (t) (occurs v t)) t*)]
-    [t (equal? v t)]))
+     (ormap (λ (t) (occurs X t)) t*)]
+    [else (equal? X t)]))
 (define (unify t1 t2)
   (match* (t1 t2)
-    [(_ (? parameter?))
-     (unless (or (eqv? t1 (?/get t2)) (not (occurs (?/get t2) t1)))
-       (error (format "~a occurs in ~a" (?/get t2) (?/get t1))))
-     (t2 (?/get t1))]
-    ; swap
-    [((? parameter?) _) (unify t2 t1)]
+    [(X t) #:when (and (parameter? X)
+                       (string-prefix? (symbol->string (tt-tm (?/get X))) "?"))
+           (when (occurs X t)
+             (error (format "~a occurs in ~a" (?/get t) (?/get X))))
+           ; subst
+           (X (?/get t))]
+    [(t X) #:when (parameter? X)
+           (unify X t)]
     [(`(,a* ...) `(,b* ...))
      (map unify a* b*)]
     [((tt tm1 ty1) (tt tm2 ty2))
@@ -46,6 +48,7 @@
      (unify tm1 tm2)]
     ; not free variable, then we expect they are the same
     [(_ _) (ty= t1 t2)]))
+
 (define (: term type)
   (unless (ty= (<- (?/get term)) type)
     (error (format "~a is a ~a, not a ~a"
@@ -61,69 +64,14 @@
     (error (format "~a != ~a" (pretty t1) (pretty t2)))))
 
 (module+ test
-  (define Bool (tt 'Bool U))
-  (define (true) (tt 'true Bool))
-  (define (false) (tt 'false Bool))
+  (define a (? U))
+  (define b (? U))
+  (unify a b)
+  (check-equal? (b) (a))
+  (check-equal? (a) (b))
 
   (define Nat (tt 'Nat U))
-  (define (z) (tt 'z Nat))
-  (define (s n)
-    (: n Nat)
-    (tt `(s ,n) Nat))
-
-  (define (List A)
-    (: A U)
-    (tt `(List ,A) U))
-  (define (nil) (tt 'nil (List (? U))))
-  (define (:: #:A [A (? U)] a lst)
-    (unify A (<- a))
-    (: A U)
-    (unify (List A) (<- lst))
-    (tt `(:: ,a ,lst) (List A)))
-
-  (define (Vec LEN E)
-    (: LEN Nat)
-    (: E U)
-    (tt `(Vec ,LEN ,E) U))
-  (define (vecnil) (tt 'vecnil (Vec (z) (? U))))
-  (define (vec:: #:E [E (? U)] #:LEN [LEN (? Nat)] e v)
-    (unify E (<- e))
-    (: E U)
-    (unify (Vec LEN E) (<- v))
-    (tt `(vec:: ,e ,v) (Vec (s LEN) E)))
-
-  (define (≡ #:A [A (? U)] a b)
-    (: A U)
-    (unify (<- a) A)
-    (: b A)
-    (tt `(≡ ,A ,a ,b) U))
-  (define (refl #:A [A (? U)] #:a [a (? A)])
-    (tt 'refl (≡ a a)))
-
-  (define (vec/length v)
-    (define LEN (? Nat))
-    (define E (? U))
-    (unify (Vec LEN E) (<- v))
-    LEN)
-
-  (define (sym #:A [A (? U)] #:x [x (? A)] #:y [y (? A)]
-               [P1 (? (≡ x y))])
-    (unify (refl) P1)
-    (let ([r (refl)])
-      (unify (≡ y x) (<- r))
-      r))
-  (sym)
-
-  (define (Nat/+ m n)
-    (: m Nat)
-    (: n Nat)
-    (match (tt-tm (?/get m))
-      ['z n]
-      [`(s ,m-)
-       (s (Nat/+ m- n))]))
-
-  (define (n+0/Nat #:n [n (? Nat)])
-    (let ([r (refl)])
-      (unify (≡ (Nat/+ (z) n) n) (<- r))
-      r))
-  (n+0/Nat))
+  (define z (tt 'z Nat))
+  (define f (? Nat))
+  (unify z f)
+  (check-equal? z (f)))
