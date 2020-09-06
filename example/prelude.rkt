@@ -24,7 +24,8 @@
      [vec:: #:LEN [LEN Nat] #:A [A U]
             [a A] [v (Vec LEN A)]
             (Vec (s LEN) A)])
-(define (Vec/length #:LEN [LEN Nat] #:A [A U] [v (Vec LEN A)])
+(define (Vec/length #:LEN [LEN Nat] #:A [A U] [v (Vec LEN A)]
+                    -> Nat)
   LEN)
 
 (ind (≡ #:A [A U] [a A] [b A])

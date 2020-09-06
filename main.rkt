@@ -58,13 +58,15 @@
     [`((~literal define) (name:id
                           (~or [~seq k*:keyword [ki*:id ktyp*:typ]]
                                [p*:id p/ty*:typ])
-                          ...)
-                         body* ...)
+                          ...
+                          -> final-typ:typ)
+                         body)
      #'(define (name {~@ k* [ki* (? ktyp*)]} ...
                      p* ...)
          (unify (<- ki*) ktyp*) ...
          (unify p/ty* (<- p*)) ...
-         body* ...)]
+         (unify final-typ (<- body))
+         body)]
     ;; provide
     [`((~literal provide) . any) #'(provide . any)]
     ;; require

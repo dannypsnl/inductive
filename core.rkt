@@ -35,7 +35,7 @@
   (match* (t1 t2)
     [(X t) #:when (and (parameter? X)
                        (string-prefix? (symbol->string (tt-tm (?/get X))) "?"))
-           (when (occurs X t)
+           (when (and (occurs X t) (not (equal? X t)))
              (error (format "~a occurs in ~a" (?/get t) (?/get X))))
            ; subst
            (X (?/get t))]

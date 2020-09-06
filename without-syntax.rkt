@@ -55,6 +55,17 @@
     r))
 (sym)
 
+(define (trans #:A [A (? U)]
+               #:x [x (? A)] #:y [y (? A)] #:z [z (? A)]
+               [P1 (? (≡ x y))]
+               [P2 (? (≡ y z))])
+  (unify (refl) P1)
+  (unify (refl) P2)
+  (let ([r (refl)])
+    (unify (≡ x z) (<- r))
+    r))
+(trans)
+
 (define (Nat/+ m n)
   (: m Nat)
   (: n Nat)
